@@ -23,5 +23,4 @@ export async function transformXCodeResults(
   ];
 
   await exec.exec('xcrun', args, options);
-  console.log(`Output: ${output}`);
 }
