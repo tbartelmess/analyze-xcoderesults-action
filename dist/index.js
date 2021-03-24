@@ -41,7 +41,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputFile = core.getInput('results');
-            core.debug(`Analyzing ${inputFile} ...`);
+            core.info(`Analyzing ${inputFile} ...`);
         }
         catch (error) {
             core.setFailed(error.message);
