@@ -42,7 +42,9 @@ async function run(): Promise<void> {
     const inputFile: string = core.getInput('results')
     core.info(`Analyzing ${inputFile} ...`)
 
-    let output = await xcresulttool.generateGitHubCheckOutput(inputFile)
+    let settings = new xcresulttool.GenerationSettings()
+    settings.readActionSettings()
+    let output = await xcresulttool.generateGitHubCheckOutput(settings, inputFile)
     core.debug(
       `Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`
     )

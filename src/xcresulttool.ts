@@ -9,18 +9,54 @@ export type Annotations = NonNullable<
   >['annotations']
 >
 
-export async function generateGitHubCheckOutput(file: string): Promise<any> {
+export class GenerationSettings {
+  testSummaryTable: boolean = true;
+  testFailureAnnotations: boolean = true;
+  summary: boolean = true;
+  warningAnnotations: boolean = true;
+  showSDKInfo: boolean = true;
+
+  readActionSettings() {
+    this.testSummaryTable = (core.getInput('testSummaryTable') === "true")
+    this.testFailureAnnotations = (core.getInput('testFailureAnnotations') === "true")
+    this.summary = (core.getInput('summary') === "true")
+    this.warningAnnotations = (core.getInput('warningAnnotations') === "true")
+    this.showSDKInfo = (core.getInput('showSDKInfo') === "true")
+  }
+}
+
+export async function generateGitHubCheckOutput(settings: GenerationSettings, file: string): Promise<any> {
   let summary: ResultSummary = await convertResultsToJSON(file)
-  let annotations = summary.issues.testFailureSummaries._values.map(failure => {
-    return testFailureToGitHubAnnotation(failure)
-  })
-  let warningAnnotations = summary.issues.warningSummaries?._values.map(warning => {
-    return warningsToGitHubAnnotation(warning)
-  })
-  annotations.push(...warningAnnotations)
+  let annotations: GitHubAnnotation[] = []
+
+  if (settings.testSummaryTable) {
+    let failureAnnotations = summary.issues.testFailureSummaries._values.forEach(failure => {
+      let annotation = testFailureToGitHubAnnotation(failure)
+      annotations.push(annotation)
+    })
+  }
+
+  if (settings.warningAnnotations) {
+    let warningAnnotations = summary.issues.warningSummaries?._values.forEach(warning => {
+        let annotation = warningsToGitHubAnnotation(warning)
+        if (annotation) {
+          annotations.push(annotation)
+        }
+    })
+  }
+
+  let summaryMd = ""
+
+  if (settings.summary) {
+    summaryMd += buildSummary(summary.metrics)
+  }
+
+  if (settings.testSummaryTable) {
+    summaryMd += testSummary(summary.metrics)
+  }
 
   return {
-    summary: testSummary(summary.metrics),
+    summary: summaryMd,
     title: core.getInput('title'),
     annotations: annotations
   }
@@ -186,17 +222,29 @@ export function testSummary(metrics: ResultMetrics): string {
   let failed = metrics?.testsFailedCount._value ?? 0
   let passed = testCount - failed
   return `
+
+## Tests
 |Tests Passed ✅ | Tests Failed ⛔️ | Tests Total |
 |:---------------|:----------------|:------------|
 | ${passed} | ${failed} | ${testCount} |
 `
 }
 
+export function buildSummary(metrics: ResultMetrics) {
+  let testCount = metrics?.testsCount._value ?? 0
+  let failed = metrics?.testsFailedCount._value ?? 0
+  let passed = testCount - failed
+return `
+## Summary
+🧪 ${passed}/${testCount} tests passed
+⚠️ Build finished with **124** Warnings
+`
+}
 
 export function parseURLToLocation(urlString: string): LocationInfo {
   let url = new URL(urlString)
   let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '')
-  let locations = url.hash.substring(1).split('&')
+  let locations = url.hash.substring(1).split('&') as [string]
 
   let info: LocationInfo = {
     file: path
@@ -223,7 +271,11 @@ export function parseURLToLocation(urlString: string): LocationInfo {
   return info
 }
 
-export function warningsToGitHubAnnotation(issue: IssueSummary): GitHubAnnotation {
+export function warningsToGitHubAnnotation(issue: IssueSummary): GitHubAnnotation | null {
+  let location = issue.documentLocationInCreatingWorkspace;
+  if (location == undefined) {
+    return null;
+  }
   let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value)
   let annotation: GitHubAnnotation = {
     path: info.file,
