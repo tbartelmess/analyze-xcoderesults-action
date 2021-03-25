@@ -43,7 +43,7 @@ const ok = __importStar(__webpack_require__(1231));
 const prEvents = [
     'pull_request',
     'pull_request_review',
-    'pull_request_review_comment',
+    'pull_request_review_comment'
 ];
 function getSHA() {
     let sha = github.context.sha;
@@ -55,7 +55,6 @@ function getSHA() {
     }
     return sha;
 }
-;
 const formatDate = () => {
     return new Date().toISOString();
 };
@@ -64,7 +63,7 @@ function run() {
         try {
             const ownership = {
                 owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
+                repo: github.context.repo.repo
             };
             const sha = getSHA();
             const inputFile = core.getInput('results');
@@ -75,9 +74,9 @@ function run() {
             let checkInfo = {
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
-                name: "XCode Results",
-                status: "completed",
-                conclusion: "failure",
+                name: 'XCode Results',
+                status: 'completed',
+                conclusion: 'failure',
                 head_sha: sha,
                 output: output
             };
@@ -134,12 +133,12 @@ const exec = __importStar(__webpack_require__(1514));
 function generateGitHubCheckOutput(file) {
     return __awaiter(this, void 0, void 0, function* () {
         let summary = yield convertResultsToJSON(file);
-        let annotations = summary.issues.testFailureSummaries._values.map((failure) => {
+        let annotations = summary.issues.testFailureSummaries._values.map(failure => {
             return testFailureToGitHubAnnotation(failure);
         });
         return {
             summary: testSummary(summary.metrics),
-            title: "Test Title",
+            title: 'Test Title',
             annotations: annotations
         };
     });
@@ -189,13 +188,13 @@ exports.testSummary = testSummary;
 function testFailureToGitHubAnnotation(issue) {
     var _a, _b, _c;
     let url = new URL(issue.documentLocationInCreatingWorkspace.url._value);
-    let path = url.pathname.replace(core.getInput("pathPrefix") + "/", "");
-    let locations = url.hash.substring(1).split("&");
+    let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '');
+    let locations = url.hash.substring(1).split('&');
     let info = {
-        file: path,
+        file: path
     };
-    locations.forEach((location) => {
-        let pair = location.split("=");
+    locations.forEach(location => {
+        let pair = location.split('=');
         if (pair.length == 2) {
             let value = parseInt(pair[1]);
             switch (pair[0]) {
