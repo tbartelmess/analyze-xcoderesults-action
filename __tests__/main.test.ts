@@ -3,7 +3,7 @@ import * as process from 'process'
 import * as cp from 'child_process'
 import * as path from 'path'
 import * as xcresultool from '../src/xcresulttool'
-
+jest.setTimeout(10000)
 const TEST_FILE = './TestResultsMac.xcresult'
 beforeEach(() => {
   process.env['INPUT_PATHPREFIX'] =
