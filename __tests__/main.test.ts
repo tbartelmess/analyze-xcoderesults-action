@@ -19,8 +19,8 @@ test('test summary generation', async () => {
   expect(summary).toBeDefined
   expect(summary.metrics).toBeDefined
   let markdown = xcresultool.testSummary(summary.metrics)
-  expect(markdown.split('\n').length).toBe(5)
-  expect(markdown.split('\n')[3]).toBe('| 1 | 1 | 2 |')
+  expect(markdown.split('\n').length).toBe(7)
+  expect(markdown.split('\n')[5]).toBe('| 1 | 1 | 2 |')
 })
 
 test('test check output', async () => {
