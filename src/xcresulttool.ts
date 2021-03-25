@@ -9,12 +9,12 @@ export type Annotations = NonNullable<
 
 
 export async function generateGitHubCheckOutput(file: string): Promise<any> {
-  let json: ResultSummary = await convertResultsToJSON(file)
-  let annotations = json.issues.testFailureSummaries._values.map((failure) => {
+  let summary: ResultSummary = await convertResultsToJSON(file)
+  let annotations = summary.issues.testFailureSummaries._values.map((failure) => {
     return testFailureToGitHubAnnotation(failure);
   });
   return {
-    summary: "Test Summary",
+    summary:  testSummary(summary.metrics),
     title: "Test Title",
     annotations: annotations
   }

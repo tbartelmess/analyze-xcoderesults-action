@@ -133,12 +133,12 @@ const core = __importStar(__webpack_require__(2186));
 const exec = __importStar(__webpack_require__(1514));
 function generateGitHubCheckOutput(file) {
     return __awaiter(this, void 0, void 0, function* () {
-        let json = yield convertResultsToJSON(file);
-        let annotations = json.issues.testFailureSummaries._values.map((failure) => {
+        let summary = yield convertResultsToJSON(file);
+        let annotations = summary.issues.testFailureSummaries._values.map((failure) => {
             return testFailureToGitHubAnnotation(failure);
         });
         return {
-            summary: "Test Summary",
+            summary: testSummary(summary.metrics),
             title: "Test Title",
             annotations: annotations
         };
