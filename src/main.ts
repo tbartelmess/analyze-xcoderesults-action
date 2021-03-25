@@ -61,7 +61,8 @@ async function run(): Promise<void> {
       head_sha: sha,
       output: {"annotations": annotations}
     };
-    await octokit.checks.create(checkInfo);
+    console.log(`Check Info: ${checkInfo}`)
+    await octokit.checks.create(checkInfo)
 
 
     core.debug(`Done`);
