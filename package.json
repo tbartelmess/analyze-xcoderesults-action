@@ -1,6 +1,6 @@
 {
   "name": "analyze-xcoderesults-action",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Action to show details of an XCode result bundle as GitHub check result",
   "main": "lib/main.js",
@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/tbartelmess/analyze-xcoderesults-action.git"
   },
   "keywords": [
     "actions",
     "node",
     "setup"
   ],
-  "author": "",
+  "author": "Thomas Bartelmess",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
