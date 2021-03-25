@@ -213,9 +213,9 @@ var AnnotationLevel;
     AnnotationLevel["failure"] = "failure";
 })(AnnotationLevel || (AnnotationLevel = {}));
 function testSummary(metrics) {
-    var _a, _b;
-    let testCount = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount._value) !== null && _a !== void 0 ? _a : 0;
-    let failed = (_b = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount._value) !== null && _b !== void 0 ? _b : 0;
+    var _a, _b, _c, _d;
+    let testCount = (_b = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount) === null || _a === void 0 ? void 0 : _a._value) !== null && _b !== void 0 ? _b : 0;
+    let failed = (_d = (_c = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount) === null || _c === void 0 ? void 0 : _c._value) !== null && _d !== void 0 ? _d : 0;
     let passed = testCount - failed;
     return `
 
@@ -227,14 +227,15 @@ function testSummary(metrics) {
 }
 exports.testSummary = testSummary;
 function buildSummary(metrics) {
-    var _a, _b;
-    let testCount = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount._value) !== null && _a !== void 0 ? _a : 0;
-    let failed = (_b = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount._value) !== null && _b !== void 0 ? _b : 0;
+    var _a, _b, _c, _d, _e, _f;
+    let testCount = (_b = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount) === null || _a === void 0 ? void 0 : _a._value) !== null && _b !== void 0 ? _b : 0;
+    let failed = (_d = (_c = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount) === null || _c === void 0 ? void 0 : _c._value) !== null && _d !== void 0 ? _d : 0;
     let passed = testCount - failed;
+    let warnings = (_f = (_e = metrics === null || metrics === void 0 ? void 0 : metrics.warningCount) === null || _e === void 0 ? void 0 : _e._value) !== null && _f !== void 0 ? _f : 0;
     return `
 ## Summary
 🧪 ${passed}/${testCount} tests passed
-⚠️ Build finished with **124** Warnings
+⚠️ Build finished with **${warnings}** Warnings
 `;
 }
 exports.buildSummary = buildSummary;
