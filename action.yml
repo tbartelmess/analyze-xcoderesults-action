@@ -1,5 +1,5 @@
 name: 'Analyze XCode Results'
-description: 'Provide a description here'
+description: 'Display Xcode test results and build warnings as GitHub annotations'
 author: 'Thomas Bartelmess'
 inputs:
   results:
@@ -16,16 +16,28 @@ inputs:
     required: true
     description: "Title for the check results"
     default: "Test Results"
+  testSummaryTable:
+    required: true
+    description: "Include a table with the number of passed and failed tests"
+    default: "true"
+  testFailureAnnotations:
+    required: true
+    description: "Add annotations for each failed test"
+    default: "true"
+  summary:
+    required: true
+    description: "Include an summary with the number of failed tests and warnings"
+    default: "true"
+  warningAnnotations:
+    require: true
+    description: "Add annotations for all warnings"
   showSDKInfo:
     required: true
     description: "Print the SDK Version"
     default: "true"
-  showWarnings:
-    required: true
-    description: "Show annotations for warnings"
-    default: "true"
-
-
 runs:
   using: 'node12'
   main: 'dist/index.js'
+branding:
+  icon: 'check-circle'
+  color: 'orange'
