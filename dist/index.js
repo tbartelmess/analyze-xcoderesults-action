@@ -175,7 +175,7 @@ var AnnotationLevel;
 function testFailureToGitHubAnnotation(issue) {
     var _a, _b, _c;
     let url = new URL(issue.documentLocationInCreatingWorkspace.url._value);
-    let path = url.pathname.replace(core.getInput("pathPrefix"), "");
+    let path = url.pathname.replace(core.getInput("pathPrefix") + "/", "");
     let locations = url.hash.substring(1).split("&");
     let info = {
         file: path,
