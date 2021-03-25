@@ -127,7 +127,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.testSummary = exports.convertResultsToJSON = exports.generateGitHubCheckOutput = void 0;
+exports.testFailureToGitHubAnnotation = exports.warningsToGitHubAnnotation = exports.parseURLToLocation = exports.testSummary = exports.convertResultsToJSON = exports.generateGitHubCheckOutput = void 0;
 const core = __importStar(__webpack_require__(2186));
 const exec = __importStar(__webpack_require__(1514));
 function generateGitHubCheckOutput(file) {
@@ -136,9 +136,14 @@ function generateGitHubCheckOutput(file) {
         let annotations = summary.issues.testFailureSummaries._values.map(failure => {
             return testFailureToGitHubAnnotation(failure);
         });
+        if (core.getInput("showWarnings") == "true") {
+            let warningAnnotations = summary.issues.warningSummaries._values.map(warning => {
+                return warningsToGitHubAnnotation(warning);
+            });
+        }
         return {
             summary: testSummary(summary.metrics),
-            title: 'Test Title',
+            title: core.getInput('title'),
             annotations: annotations
         };
     });
@@ -185,9 +190,8 @@ function testSummary(metrics) {
 `;
 }
 exports.testSummary = testSummary;
-function testFailureToGitHubAnnotation(issue) {
-    var _a, _b, _c;
-    let url = new URL(issue.documentLocationInCreatingWorkspace.url._value);
+function parseURLToLocation(urlString) {
+    let url = new URL(urlString);
     let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '');
     let locations = url.hash.substring(1).split('&');
     let info = {
@@ -211,6 +215,26 @@ function testFailureToGitHubAnnotation(issue) {
             }
         }
     });
+    return info;
+}
+exports.parseURLToLocation = parseURLToLocation;
+function warningsToGitHubAnnotation(issue) {
+    var _a, _b, _c;
+    let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value);
+    let annotation = {
+        path: info.file,
+        start_line: (_a = info.startLine) !== null && _a !== void 0 ? _a : 0,
+        end_line: (_c = (_b = info.endLine) !== null && _b !== void 0 ? _b : info.startLine) !== null && _c !== void 0 ? _c : 0,
+        annotation_level: AnnotationLevel.warning,
+        title: issue.message._value,
+        message: issue.message._value
+    };
+    return annotation;
+}
+exports.warningsToGitHubAnnotation = warningsToGitHubAnnotation;
+function testFailureToGitHubAnnotation(issue) {
+    var _a, _b, _c;
+    let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value);
     let annotation = {
         path: info.file,
         start_line: (_a = info.startLine) !== null && _a !== void 0 ? _a : 0,
@@ -219,11 +243,9 @@ function testFailureToGitHubAnnotation(issue) {
         title: `${issue.testCaseName._value} failed`,
         message: issue.message._value
     };
-    if (info.startLine) {
-        annotation['start_line'] = info.startLine;
-    }
     return annotation;
 }
+exports.testFailureToGitHubAnnotation = testFailureToGitHubAnnotation;
 
 
 /***/ }),

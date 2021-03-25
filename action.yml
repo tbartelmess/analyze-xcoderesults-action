@@ -16,6 +16,14 @@ inputs:
     required: true
     description: "Title for the check results"
     default: "Test Results"
+  showSDKInfo:
+    required: true
+    description: "Print the SDK Version"
+    default: "true"
+  showWarnings:
+    required: true
+    description: "Show annotations for warnings"
+    default: "true"
 
 
 runs:

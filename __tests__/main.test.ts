@@ -30,3 +30,9 @@ test('test check output', async () => {
   expect(result.summary).toBeDefined()
   expect(result.annotations).toBeDefined()
 })
+
+test('test generate warning annotations', async () => {
+  process.env['SHOWWARNINGS'] = 'true'
+  let output = await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+  expect(output.annotations.length).toBe(2)
+})

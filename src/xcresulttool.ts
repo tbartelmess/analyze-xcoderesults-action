@@ -14,9 +14,15 @@ export async function generateGitHubCheckOutput(file: string): Promise<any> {
   let annotations = summary.issues.testFailureSummaries._values.map(failure => {
     return testFailureToGitHubAnnotation(failure)
   })
+  if (core.getInput("showWarnings") == "true") {
+    let warningAnnotations = summary.issues.warningSummaries._values.map(warning => {
+      return warningsToGitHubAnnotation(warning)
+    })
+
+  }
   return {
     summary: testSummary(summary.metrics),
-    title: 'Test Title',
+    title: core.getInput('title'),
     annotations: annotations
   }
 }
@@ -73,7 +79,9 @@ interface TypedValue<T> {
 
 interface ResultIssueSummaries {
   _type: TypeInfo
-  testFailureSummaries: TypedArray<any>
+  testFailureSummaries: TypedArray<TestFailureIssueSummary>
+  warningSummaries: TypedArray<IssueSummary>
+
 }
 
 interface URL {
@@ -88,10 +96,11 @@ interface DocumentLocation {
 
 interface IssueSummary {
   documentLocationInCreatingWorkspace: DocumentLocation
+  message: TypedValue<string>
+  issueType: TypedValue<string>
 }
 
 interface TestFailureIssueSummary extends IssueSummary {
-  message: TypedValue<string>
   productingTarget: TypedValue<string>
   testCaseName: TypedValue<string>
 }
@@ -110,6 +119,49 @@ interface ResultMetrics {
   _type: TypeInfo
   testsCount: TypedValue<number>
   testsFailedCount: TypedValue<number>
+}
+
+interface ActionSDKRecord {
+  _type: TypeInfo
+  identifier: TypedValue<string>
+  name: TypedValue<string>
+  operatingSystemVersion: TypedValue<string>
+}
+
+interface ActionRunDestinationRecord {
+  _type: TypeInfo
+  displayName: TypedValue<string>
+  localComputerRecord: ActionDeviceRecord
+  targetArchitecture: TypedValue<string>
+  targetDeviceRecord: ActionDeviceRecord
+  targetSDKRecord: ActionSDKRecord
+}
+
+interface ActionPlatformRecord {
+  _type: TypeInfo
+  identifier: TypedValue<string>
+  userDescription: TypedValue<string>
+}
+
+interface ActionDeviceRecord {
+  _type: TypeInfo
+  busSpeedInMHz: TypedValue<string>
+  cpuCount: TypedValue<string>
+  cpuKind: TypedValue<string>
+  cpuSpeedInMHz: TypedValue<string>
+  identifier: TypedValue<string>
+  isConcreteDevice: TypedValue<string>
+  logicalCPUCoresPerPackage: TypedValue<string>
+  modelCode: TypedValue<string>
+  modelName: TypedValue<string>
+  modelUTI: TypedValue<string>
+  name: TypedValue<string>
+  nativeArchitecture: TypedValue<string>
+  operatingSystemVersion: TypedValue<string>
+  operatingSystemVersionWithBuildNumber: TypedValue<string>
+  physicalCPUCoresPerPackage: TypedValue<string>
+  platformRecord: TypedValue<string>
+  ramSizeInMegabytes: TypedValue<string>
 }
 
 enum AnnotationLevel {
@@ -141,10 +193,8 @@ export function testSummary(metrics: ResultMetrics): string {
 `
 }
 
-function testFailureToGitHubAnnotation(
-  issue: TestFailureIssueSummary
-): GitHubAnnotation {
-  let url = new URL(issue.documentLocationInCreatingWorkspace.url._value)
+export function parseURLToLocation(urlString: string): LocationInfo {
+  let url = new URL(urlString)
   let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '')
   let locations = url.hash.substring(1).split('&')
 
@@ -170,7 +220,26 @@ function testFailureToGitHubAnnotation(
       }
     }
   })
+  return info
+}
 
+export function warningsToGitHubAnnotation(issue: IssueSummary): GitHubAnnotation {
+  let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value)
+  let annotation: GitHubAnnotation = {
+    path: info.file,
+    start_line: info.startLine ?? 0,
+    end_line: info.endLine ?? info.startLine ?? 0,
+    annotation_level: AnnotationLevel.warning,
+    title: issue.message._value,
+    message: issue.message._value
+  }
+  return annotation
+}
+
+export function testFailureToGitHubAnnotation(
+  issue: TestFailureIssueSummary
+): GitHubAnnotation {
+  let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value)
   let annotation: GitHubAnnotation = {
     path: info.file,
     start_line: info.startLine ?? 0,
@@ -179,10 +248,5 @@ function testFailureToGitHubAnnotation(
     title: `${issue.testCaseName._value} failed`,
     message: issue.message._value
   }
-
-  if (info.startLine) {
-    annotation['start_line'] = info.startLine
-  }
-
   return annotation
 }
