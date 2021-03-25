@@ -9,6 +9,9 @@ inputs:
     required: false
     description: 'Build Path Prefix'
     default: ${{ github.workspace }}
+  githubToken:
+    required: true
+    description: "GitHub token to create the check"
 
 runs:
   using: 'node12'
