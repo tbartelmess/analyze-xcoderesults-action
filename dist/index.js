@@ -83,6 +83,7 @@ function run() {
                 head_sha: sha,
                 output: { "annotations": annotations }
             };
+            console.log(`Check Info: ${checkInfo}`);
             yield octokit.checks.create(checkInfo);
             core.debug(`Done`);
         }
