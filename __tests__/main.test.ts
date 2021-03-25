@@ -4,11 +4,11 @@ import * as cp from 'child_process'
 import * as path from 'path'
 import * as xcresultool from '../src/xcresulttool'
 
-
-const TEST_FILE = "./TestResultsMac.xcresult"
+const TEST_FILE = './TestResultsMac.xcresult'
 beforeEach(() => {
-  process.env['INPUT_PATHPREFIX'] = '/Users/thomasbartelmess/Developer/action-test/'
-});
+  process.env['INPUT_PATHPREFIX'] =
+    '/Users/thomasbartelmess/Developer/action-test/'
+})
 
 test('wait 500 ms', async () => {
   await xcresultool.generateGitHubCheckOutput(TEST_FILE)
@@ -19,8 +19,8 @@ test('test summary generation', async () => {
   expect(summary).toBeDefined
   expect(summary.metrics).toBeDefined
   let markdown = xcresultool.testSummary(summary.metrics)
-  expect(markdown.split("\n").length).toBe(5)
-  expect(markdown.split("\n")[3]).toBe("| 1 | 1 | 2 |")
+  expect(markdown.split('\n').length).toBe(5)
+  expect(markdown.split('\n')[3]).toBe('| 1 | 1 | 2 |')
 })
 
 test('test check output', async () => {

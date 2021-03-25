@@ -1,26 +1,29 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import {ExecOptions} from '@actions/exec/lib/interfaces'
-import {RestEndpointMethodTypes} from '@octokit/rest';
+import {RestEndpointMethodTypes} from '@octokit/rest'
 
 export type Annotations = NonNullable<
-  NonNullable<RestEndpointMethodTypes['checks']['create']['parameters']['output']>['annotations']
->;
-
+  NonNullable<
+    RestEndpointMethodTypes['checks']['create']['parameters']['output']
+  >['annotations']
+>
 
 export async function generateGitHubCheckOutput(file: string): Promise<any> {
   let summary: ResultSummary = await convertResultsToJSON(file)
-  let annotations = summary.issues.testFailureSummaries._values.map((failure) => {
-    return testFailureToGitHubAnnotation(failure);
-  });
+  let annotations = summary.issues.testFailureSummaries._values.map(failure => {
+    return testFailureToGitHubAnnotation(failure)
+  })
   return {
-    summary:  testSummary(summary.metrics),
-    title: "Test Title",
+    summary: testSummary(summary.metrics),
+    title: 'Test Title',
     annotations: annotations
   }
 }
 
-export async function convertResultsToJSON(file: string): Promise<ResultSummary> {
+export async function convertResultsToJSON(
+  file: string
+): Promise<ResultSummary> {
   let output = ''
   const options: ExecOptions = {}
   options.listeners = {
@@ -39,11 +42,11 @@ export async function convertResultsToJSON(file: string): Promise<ResultSummary>
   ]
 
   await exec.exec('xcrun', args, options)
-  return (JSON.parse(output) as ResultSummary)
+  return JSON.parse(output) as ResultSummary
 }
 
 interface ResultSummary {
-  actions: [any];
+  actions: [any]
   issues: ResultIssueSummaries
   metrics: ResultMetrics
 }
@@ -54,17 +57,17 @@ interface TypeInfo {
 }
 
 interface TypedDictionary<T> {
-  _type: TypeInfo,
+  _type: TypeInfo
   _value: T
 }
 
 interface TypedArray<T> {
-  _type: TypeInfo;
-  _values: [T];
+  _type: TypeInfo
+  _values: [T]
 }
 
 interface TypedValue<T> {
-  _type: TypeInfo,
+  _type: TypeInfo
   _value: T
 }
 
@@ -110,9 +113,9 @@ interface ResultMetrics {
 }
 
 enum AnnotationLevel {
-  notice = "notice",
-  warning = "warning",
-  failure = "failure"
+  notice = 'notice',
+  warning = 'warning',
+  failure = 'failure'
 }
 
 interface GitHubAnnotation {
@@ -127,12 +130,10 @@ interface GitHubAnnotation {
   raw_details?: string
 }
 
-
-
 export function testSummary(metrics: ResultMetrics): string {
   let testCount = metrics?.testsCount._value ?? 0
   let failed = metrics?.testsFailedCount._value ?? 0
-  let passed = testCount - failed;
+  let passed = testCount - failed
   return `
 |Tests Passed ✅ | Tests Failed ⛔️ | Tests Total |
 |:---------------|:----------------|:------------|
@@ -140,33 +141,35 @@ export function testSummary(metrics: ResultMetrics): string {
 `
 }
 
-function testFailureToGitHubAnnotation(issue: TestFailureIssueSummary): GitHubAnnotation {
+function testFailureToGitHubAnnotation(
+  issue: TestFailureIssueSummary
+): GitHubAnnotation {
   let url = new URL(issue.documentLocationInCreatingWorkspace.url._value)
-  let path = url.pathname.replace(core.getInput("pathPrefix") + "/", "")
-  let locations = url.hash.substring(1).split("&")
+  let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '')
+  let locations = url.hash.substring(1).split('&')
 
   let info: LocationInfo = {
-    file: path,
+    file: path
   }
 
-  locations.forEach((location) => {
-    let pair = location.split("=");
+  locations.forEach(location => {
+    let pair = location.split('=')
     if (pair.length == 2) {
-      let value = parseInt(pair[1]);
+      let value = parseInt(pair[1])
       switch (pair[0]) {
         case 'StartingLineNumber': {
-          info.startLine = value;
-          break;
+          info.startLine = value
+          break
         }
         case 'EndingLineNumber': {
-          info.endLine = value;
-          break;
+          info.endLine = value
+          break
         }
         default:
-          break;
+          break
       }
     }
-  });
+  })
 
   let annotation: GitHubAnnotation = {
     path: info.file,
@@ -178,9 +181,8 @@ function testFailureToGitHubAnnotation(issue: TestFailureIssueSummary): GitHubAn
   }
 
   if (info.startLine) {
-    annotation['start_line'] = info.startLine;
+    annotation['start_line'] = info.startLine
   }
 
   return annotation
-
 }
