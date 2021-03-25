@@ -162,6 +162,7 @@ function transformXCodeResults(file) {
             return testFailureToGitHubAnnotation(failure);
         });
         console.log(annotations);
+        return annotations;
     });
 }
 exports.transformXCodeResults = transformXCodeResults;

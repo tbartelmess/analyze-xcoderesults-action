@@ -32,6 +32,7 @@ export async function transformXCodeResults(file: string): Promise<any> {
     return testFailureToGitHubAnnotation(failure);
   });
   console.log(annotations);
+  return annotations;
 }
 
 interface ResultSummary {
