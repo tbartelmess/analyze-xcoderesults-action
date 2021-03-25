@@ -11,7 +11,7 @@ beforeEach(() => {
 })
 
 test('wait 500 ms', async () => {
-  await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+  await xcresultool.generateGitHubCheckOutput(new xcresultool.GenerationSettings(), TEST_FILE)
 })
 
 test('test summary generation', async () => {
@@ -24,7 +24,7 @@ test('test summary generation', async () => {
 })
 
 test('test check output', async () => {
-  let result = await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+  let result = await xcresultool.generateGitHubCheckOutput(new xcresultool.GenerationSettings(),TEST_FILE)
   let output = result.output
   expect(result.title).toBeDefined()
   expect(result.summary).toBeDefined()
@@ -33,6 +33,6 @@ test('test check output', async () => {
 
 test('test generate warning annotations', async () => {
   process.env['SHOWWARNINGS'] = 'true'
-  let output = await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+  let output = await xcresultool.generateGitHubCheckOutput(new xcresultool.GenerationSettings(),TEST_FILE)
   expect(output.annotations.length).toBe(2)
 })
