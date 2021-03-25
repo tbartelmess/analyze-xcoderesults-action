@@ -80,9 +80,10 @@ function run() {
                 summary: "Test Summary",
                 title: "Test Title",
                 conclusion: "failure",
+                head_sha: sha,
                 output: { "annotations": annotations }
             };
-            octokit.checks.create(checkInfo);
+            yield octokit.checks.create(checkInfo);
             core.debug(`Done`);
         }
         catch (error) {
