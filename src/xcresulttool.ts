@@ -152,8 +152,9 @@ interface TestFailureInfo {
 
 interface ResultMetrics {
   _type: TypeInfo
-  testsCount: TypedValue<number>
-  testsFailedCount: TypedValue<number>
+  testsCount?: TypedValue<number>
+  testsFailedCount?: TypedValue<number>
+  warningCount?: TypedValue<number>
 }
 
 interface ActionSDKRecord {
@@ -231,13 +232,14 @@ export function testSummary(metrics: ResultMetrics): string {
 }
 
 export function buildSummary(metrics: ResultMetrics) {
-  let testCount = metrics?.testsCount._value ?? 0
-  let failed = metrics?.testsFailedCount._value ?? 0
+  let testCount = metrics?.testsCount?._value ?? 0
+  let failed = metrics?.testsFailedCount?._value ?? 0
   let passed = testCount - failed
+  let warnings = metrics?.warningCount?._value ?? 0
 return `
 ## Summary
 🧪 ${passed}/${testCount} tests passed
-⚠️ Build finished with **124** Warnings
+⚠️ Build finished with **${warnings}** Warnings
 `
 }
 
