@@ -77,6 +77,8 @@ function run() {
                 repo: github.context.repo.repo,
                 name: "XCode Results",
                 status: "completed",
+                summary: "Test Summary",
+                title: "Test Title",
                 conclusion: "failure",
                 output: { "annotations": annotations }
             };
