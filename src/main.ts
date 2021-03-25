@@ -45,7 +45,7 @@ async function run(): Promise<void> {
     const inputFile: string = core.getInput('results')
     core.info(`Analyzing ${inputFile} ...`)
 
-    let annotations = await xcresulttool.transformXCodeResults(inputFile)
+    let output = await xcresulttool.generateGitHubCheckOutput(inputFile)
     core.debug(`Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`);
 
     let octokit = new ok.Octokit();
@@ -57,17 +57,9 @@ async function run(): Promise<void> {
       status: "completed",
       conclusion: "failure",
       head_sha: sha,
-      output: {
-        summary: "Test Summary",
-        title: "Test Title",
-        annotations: annotations
-      }
+      output: output
     };
-    console.log(`Annotations: ${JSON.stringify(annotations)}`);
-    console.log(`Check Info: ${JSON.stringify(checkInfo)}`)
     await octokit.checks.create(checkInfo)
-
-
     core.debug(`Done`);
   } catch (error) {
     core.setFailed(error.message)

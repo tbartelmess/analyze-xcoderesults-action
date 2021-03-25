@@ -69,7 +69,7 @@ function run() {
             const sha = getSHA();
             const inputFile = core.getInput('results');
             core.info(`Analyzing ${inputFile} ...`);
-            let annotations = yield xcresulttool.transformXCodeResults(inputFile);
+            let output = yield xcresulttool.generateGitHubCheckOutput(inputFile);
             core.debug(`Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`);
             let octokit = new ok.Octokit();
             let checkInfo = {
@@ -79,14 +79,8 @@ function run() {
                 status: "completed",
                 conclusion: "failure",
                 head_sha: sha,
-                output: {
-                    summary: "Test Summary",
-                    title: "Test Title",
-                    annotations: annotations
-                }
+                output: output
             };
-            console.log(`Annotations: ${JSON.stringify(annotations)}`);
-            console.log(`Check Info: ${JSON.stringify(checkInfo)}`);
             yield octokit.checks.create(checkInfo);
             core.debug(`Done`);
         }
@@ -134,10 +128,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.transformXCodeResults = void 0;
+exports.testSummary = exports.convertResultsToJSON = exports.generateGitHubCheckOutput = void 0;
 const core = __importStar(__webpack_require__(2186));
 const exec = __importStar(__webpack_require__(1514));
-function transformXCodeResults(file) {
+function generateGitHubCheckOutput(file) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let json = yield convertResultsToJSON(file);
+        let annotations = json.issues.testFailureSummaries._values.map((failure) => {
+            return testFailureToGitHubAnnotation(failure);
+        });
+        return {
+            summary: "Test Summary",
+            title: "Test Title",
+            annotations: annotations
+        };
+    });
+}
+exports.generateGitHubCheckOutput = generateGitHubCheckOutput;
+function convertResultsToJSON(file) {
     return __awaiter(this, void 0, void 0, function* () {
         let output = '';
         const options = {};
@@ -156,22 +164,28 @@ function transformXCodeResults(file) {
             'json'
         ];
         yield exec.exec('xcrun', args, options);
-        let json = JSON.parse(output);
-        let annotations = json.issues.testFailureSummaries._values.map((failure) => {
-            console.log(failure);
-            return testFailureToGitHubAnnotation(failure);
-        });
-        console.log(annotations);
-        return annotations;
+        return JSON.parse(output);
     });
 }
-exports.transformXCodeResults = transformXCodeResults;
+exports.convertResultsToJSON = convertResultsToJSON;
 var AnnotationLevel;
 (function (AnnotationLevel) {
     AnnotationLevel["notice"] = "notice";
     AnnotationLevel["warning"] = "warning";
     AnnotationLevel["failure"] = "failure";
 })(AnnotationLevel || (AnnotationLevel = {}));
+function testSummary(metrics) {
+    var _a, _b;
+    let testCount = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount._value) !== null && _a !== void 0 ? _a : 0;
+    let failed = (_b = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount._value) !== null && _b !== void 0 ? _b : 0;
+    let passed = testCount - failed;
+    return `
+|Tests Passed ✅ | Tests Failed ⛔️ | Tests Total |
+|:---------------|:----------------|:------------|
+| ${passed} | ${failed} | ${testCount} |
+`;
+}
+exports.testSummary = testSummary;
 function testFailureToGitHubAnnotation(issue) {
     var _a, _b, _c;
     let url = new URL(issue.documentLocationInCreatingWorkspace.url._value);

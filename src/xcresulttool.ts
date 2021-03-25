@@ -7,7 +7,20 @@ export type Annotations = NonNullable<
   NonNullable<RestEndpointMethodTypes['checks']['create']['parameters']['output']>['annotations']
 >;
 
-export async function transformXCodeResults(file: string): Promise<any> {
+
+export async function generateGitHubCheckOutput(file: string): Promise<any> {
+  let json: ResultSummary = await convertResultsToJSON(file)
+  let annotations = json.issues.testFailureSummaries._values.map((failure) => {
+    return testFailureToGitHubAnnotation(failure);
+  });
+  return {
+    summary: "Test Summary",
+    title: "Test Title",
+    annotations: annotations
+  }
+}
+
+export async function convertResultsToJSON(file: string): Promise<ResultSummary> {
   let output = ''
   const options: ExecOptions = {}
   options.listeners = {
@@ -26,18 +39,13 @@ export async function transformXCodeResults(file: string): Promise<any> {
   ]
 
   await exec.exec('xcrun', args, options)
-  let json: ResultSummary = JSON.parse(output);
-  let annotations = json.issues.testFailureSummaries._values.map((failure) => {
-    console.log(failure)
-    return testFailureToGitHubAnnotation(failure);
-  });
-  console.log(annotations);
-  return annotations;
+  return (JSON.parse(output) as ResultSummary)
 }
 
 interface ResultSummary {
   actions: [any];
-  issues: ResultIssueSummaries;
+  issues: ResultIssueSummaries
+  metrics: ResultMetrics
 }
 
 interface TypeInfo {
@@ -93,7 +101,12 @@ interface LocationInfo {
 
 interface TestFailureInfo {
   location: LocationInfo
+}
 
+interface ResultMetrics {
+  _type: TypeInfo
+  testsCount: TypedValue<number>
+  testsFailedCount: TypedValue<number>
 }
 
 enum AnnotationLevel {
@@ -112,6 +125,19 @@ interface GitHubAnnotation {
   message: string
   title: string
   raw_details?: string
+}
+
+
+
+export function testSummary(metrics: ResultMetrics): string {
+  let testCount = metrics?.testsCount._value ?? 0
+  let failed = metrics?.testsFailedCount._value ?? 0
+  let passed = testCount - failed;
+  return `
+|Tests Passed ✅ | Tests Failed ⛔️ | Tests Total |
+|:---------------|:----------------|:------------|
+| ${passed} | ${failed} | ${testCount} |
+`
 }
 
 function testFailureToGitHubAnnotation(issue: TestFailureIssueSummary): GitHubAnnotation {

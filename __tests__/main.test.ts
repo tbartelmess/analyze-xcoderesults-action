@@ -4,13 +4,29 @@ import * as cp from 'child_process'
 import * as path from 'path'
 import * as xcresultool from '../src/xcresulttool'
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
-})
+
+const TEST_FILE = "./TestResultsMac.xcresult"
+beforeEach(() => {
+  process.env['INPUT_PATHPREFIX'] = '/Users/thomasbartelmess/Developer/action-test/'
+});
 
 test('wait 500 ms', async () => {
-  console.log('hello World')
-  process.env['INPUT_PATHPREFIX'] = '/Users/thomasbartelmess/Developer/action-test/'
-  await xcresultool.transformXCodeResults('./TestResultsMac.xcresult')
+  await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+})
+
+test('test summary generation', async () => {
+  let summary = await xcresultool.convertResultsToJSON(TEST_FILE)
+  expect(summary).toBeDefined
+  expect(summary.metrics).toBeDefined
+  let markdown = xcresultool.testSummary(summary.metrics)
+  expect(markdown.split("\n").length).toBe(5)
+  expect(markdown.split("\n")[3]).toBe("| 1 | 1 | 2 |")
+})
+
+test('test check output', async () => {
+  let result = await xcresultool.generateGitHubCheckOutput(TEST_FILE)
+  let output = result.output
+  expect(result.title).toBeDefined()
+  expect(result.summary).toBeDefined()
+  expect(result.annotations).toBeDefined()
 })
