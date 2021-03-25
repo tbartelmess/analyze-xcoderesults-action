@@ -1,8 +1,9 @@
 import * as core from '@actions/core'
 import * as xcresulttool from './xcresulttool'
 import * as github from '@actions/github';
-import * as Inputs from './namespaces/Inputs';
-import * as GitHub from './namespaces/GitHub';
+import {RestEndpointMethodTypes} from '@octokit/rest';
+import { Octokit } from "@octokit/rest";
+type PullRequest = RestEndpointMethodTypes['pulls']['get']['response']['data'];
 
 const prEvents = [
   'pull_request',
@@ -14,7 +15,7 @@ const prEvents = [
 function getSHA(): string {
   let sha = github.context.sha;
   if (prEvents.includes(github.context.eventName)) {
-    const pull = github.context.payload.pull_request as GitHub.PullRequest;
+    const pull = github.context.payload.pull_request as PullRequest;
     if (pull?.head.sha) {
       sha = pull?.head.sha;
     }
@@ -32,7 +33,7 @@ const formatDate = (): string => {
 };
 
 export const createRun = async (
-  octokit: InstanceType<typeof GitHub>,
+  octokit: InstanceType<typeof Octokit>,
   name: string,
   sha: string,
   ownership: Ownership,
