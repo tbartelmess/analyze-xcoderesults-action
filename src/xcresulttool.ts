@@ -219,8 +219,8 @@ interface GitHubAnnotation {
 }
 
 export function testSummary(metrics: ResultMetrics): string {
-  let testCount = metrics?.testsCount._value ?? 0
-  let failed = metrics?.testsFailedCount._value ?? 0
+  let testCount = metrics?.testsCount?._value ?? 0
+  let failed = metrics?.testsFailedCount?._value ?? 0
   let passed = testCount - failed
   return `
 
