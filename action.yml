@@ -9,10 +9,6 @@ inputs:
     required: false
     description: 'Build Path Prefix'
     default: ${{ github.workspace }}
-  token:
-    description: 'GITHUB_TOKEN'
-    required: true
-    default: ${{ github.token }}
 
 runs:
   using: 'node12'

@@ -2,9 +2,9 @@ import * as core from '@actions/core'
 import * as xcresulttool from './xcresulttool'
 import * as github from '@actions/github';
 import {RestEndpointMethodTypes} from '@octokit/rest';
-import { Octokit } from "@octokit/rest";
+import * as ok from "@octokit/action";
 type PullRequest = RestEndpointMethodTypes['pulls']['get']['response']['data'];
-
+type CheckCreate = RestEndpointMethodTypes['checks']['create']['parameters']
 const prEvents = [
   'pull_request',
   'pull_request_review',
@@ -32,27 +32,9 @@ const formatDate = (): string => {
   return new Date().toISOString();
 };
 
-export const createRun = async (
-  octokit: InstanceType<typeof Octokit>,
-  name: string,
-  sha: string,
-  ownership: Ownership,
-  output: any
-): Promise<number> => {
-  const {data} = await octokit.checks.create({
-    ...ownership,
-    head_sha: sha,
-    name: name,
-    started_at: formatDate(),
-    ...output
-  });
-  return data.id;
-};
-
 async function run(): Promise<void> {
   try {
-    core.debug(`Setting up OctoKit`);
-    const octokit = github.getOctokit(core.getInput('token'));
+
 
     const ownership = {
       owner: github.context.repo.owner,
@@ -65,8 +47,20 @@ async function run(): Promise<void> {
 
     let annotations = await xcresulttool.transformXCodeResults(inputFile)
     core.debug(`Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`);
-    const id = await createRun((octokit as Octokit), "Test Results", sha, ownership, {"annotations": annotations});
-    core.setOutput('check_id', id);
+
+    let octokit = new ok.Octokit();
+
+    let checkInfo: CheckCreate = {
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      name: "XCode Results",
+      status: "completed",
+      conclusion: "failure",
+      output: {"annotations": annotations}
+    };
+    octokit.checks.create(checkInfo);
+
+
     core.debug(`Done`);
   } catch (error) {
     core.setFailed(error.message)
