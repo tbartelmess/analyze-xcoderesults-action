@@ -11,5 +11,6 @@ test('throws invalid number', async () => {
 
 test('wait 500 ms', async () => {
   console.log('hello World')
+  process.env['INPUT_PATHPREFIX'] = '/Users/thomasbartelmess/Developer/action-test/'
   await xcresultool.transformXCodeResults('./TestResultsMac.xcresult')
 })

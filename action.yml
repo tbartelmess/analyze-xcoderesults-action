@@ -2,9 +2,18 @@ name: 'Analyze XCode Results'
 description: 'Provide a description here'
 author: 'Thomas Bartelmess'
 inputs:
-  results: # change this
+  results:
     required: true
-    description: 'Path to a the xcresult buindle'
+    description: 'Path to a the xcresult bundle'
+  pathPrefix:
+    required: false
+    description: 'Build Path Prefix'
+    default: ${{ github.workspace }}
+  token:
+    description: 'GITHUB_TOKEN'
+    required: true
+    default: ${{ secrets.GITHUB_TOKEN }}
+
 runs:
   using: 'node12'
   main: 'dist/index.js'
