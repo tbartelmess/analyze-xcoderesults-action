@@ -65,7 +65,7 @@ async function run(): Promise<void> {
 
     let annotations = await xcresulttool.transformXCodeResults(inputFile)
     core.debug(`Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`);
-    const id = await createRun(octokit, "Test Results", sha, ownership, {"annotations": annotations});
+    const id = await createRun((octokit as Octokit), "Test Results", sha, ownership, {"annotations": annotations});
     core.setOutput('check_id', id);
     core.debug(`Done`);
   } catch (error) {
