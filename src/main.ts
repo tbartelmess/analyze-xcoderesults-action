@@ -63,6 +63,7 @@ async function run(): Promise<void> {
         annotations: annotations
       }
     };
+    console.log(`Annotations: ${JSON.stringify(annotations)}`);
     console.log(`Check Info: ${JSON.stringify(checkInfo)}`)
     await octokit.checks.create(checkInfo)
 

@@ -85,6 +85,7 @@ function run() {
                     annotations: annotations
                 }
             };
+            console.log(`Annotations: ${JSON.stringify(annotations)}`);
             console.log(`Check Info: ${JSON.stringify(checkInfo)}`);
             yield octokit.checks.create(checkInfo);
             core.debug(`Done`);
