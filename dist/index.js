@@ -68,7 +68,9 @@ function run() {
             const sha = getSHA();
             const inputFile = core.getInput('results');
             core.info(`Analyzing ${inputFile} ...`);
-            let output = yield xcresulttool.generateGitHubCheckOutput(inputFile);
+            let settings = new xcresulttool.GenerationSettings();
+            settings.readActionSettings();
+            let output = yield xcresulttool.generateGitHubCheckOutput(settings, inputFile);
             core.debug(`Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`);
             let octokit = new ok.Octokit();
             let checkInfo = {
@@ -127,22 +129,54 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.testFailureToGitHubAnnotation = exports.warningsToGitHubAnnotation = exports.parseURLToLocation = exports.testSummary = exports.convertResultsToJSON = exports.generateGitHubCheckOutput = void 0;
+exports.testFailureToGitHubAnnotation = exports.warningsToGitHubAnnotation = exports.parseURLToLocation = exports.buildSummary = exports.testSummary = exports.convertResultsToJSON = exports.generateGitHubCheckOutput = exports.GenerationSettings = void 0;
 const core = __importStar(__webpack_require__(2186));
 const exec = __importStar(__webpack_require__(1514));
-function generateGitHubCheckOutput(file) {
+class GenerationSettings {
+    constructor() {
+        this.testSummaryTable = true;
+        this.testFailureAnnotations = true;
+        this.summary = true;
+        this.warningAnnotations = true;
+        this.showSDKInfo = true;
+    }
+    readActionSettings() {
+        this.testSummaryTable = (core.getInput('testSummaryTable') === "true");
+        this.testFailureAnnotations = (core.getInput('testFailureAnnotations') === "true");
+        this.summary = (core.getInput('summary') === "true");
+        this.warningAnnotations = (core.getInput('warningAnnotations') === "true");
+        this.showSDKInfo = (core.getInput('showSDKInfo') === "true");
+    }
+}
+exports.GenerationSettings = GenerationSettings;
+function generateGitHubCheckOutput(settings, file) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         let summary = yield convertResultsToJSON(file);
-        let annotations = summary.issues.testFailureSummaries._values.map(failure => {
-            return testFailureToGitHubAnnotation(failure);
-        });
-        let warningAnnotations = (_a = summary.issues.warningSummaries) === null || _a === void 0 ? void 0 : _a._values.map(warning => {
-            return warningsToGitHubAnnotation(warning);
-        });
-        annotations.push(...warningAnnotations);
+        let annotations = [];
+        if (settings.testSummaryTable) {
+            let failureAnnotations = summary.issues.testFailureSummaries._values.forEach(failure => {
+                let annotation = testFailureToGitHubAnnotation(failure);
+                annotations.push(annotation);
+            });
+        }
+        if (settings.warningAnnotations) {
+            let warningAnnotations = (_a = summary.issues.warningSummaries) === null || _a === void 0 ? void 0 : _a._values.forEach(warning => {
+                let annotation = warningsToGitHubAnnotation(warning);
+                if (annotation) {
+                    annotations.push(annotation);
+                }
+            });
+        }
+        let summaryMd = "";
+        if (settings.summary) {
+            summaryMd += buildSummary(summary.metrics);
+        }
+        if (settings.testSummaryTable) {
+            summaryMd += testSummary(summary.metrics);
+        }
         return {
-            summary: testSummary(summary.metrics),
+            summary: summaryMd,
             title: core.getInput('title'),
             annotations: annotations
         };
@@ -184,12 +218,26 @@ function testSummary(metrics) {
     let failed = (_b = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount._value) !== null && _b !== void 0 ? _b : 0;
     let passed = testCount - failed;
     return `
+
+## Tests
 |Tests Passed ✅ | Tests Failed ⛔️ | Tests Total |
 |:---------------|:----------------|:------------|
 | ${passed} | ${failed} | ${testCount} |
 `;
 }
 exports.testSummary = testSummary;
+function buildSummary(metrics) {
+    var _a, _b;
+    let testCount = (_a = metrics === null || metrics === void 0 ? void 0 : metrics.testsCount._value) !== null && _a !== void 0 ? _a : 0;
+    let failed = (_b = metrics === null || metrics === void 0 ? void 0 : metrics.testsFailedCount._value) !== null && _b !== void 0 ? _b : 0;
+    let passed = testCount - failed;
+    return `
+## Summary
+🧪 ${passed}/${testCount} tests passed
+⚠️ Build finished with **124** Warnings
+`;
+}
+exports.buildSummary = buildSummary;
 function parseURLToLocation(urlString) {
     let url = new URL(urlString);
     let path = url.pathname.replace(core.getInput('pathPrefix') + '/', '');
@@ -220,6 +268,10 @@ function parseURLToLocation(urlString) {
 exports.parseURLToLocation = parseURLToLocation;
 function warningsToGitHubAnnotation(issue) {
     var _a, _b, _c;
+    let location = issue.documentLocationInCreatingWorkspace;
+    if (location == undefined) {
+        return null;
+    }
     let info = parseURLToLocation(issue.documentLocationInCreatingWorkspace.url._value);
     let annotation = {
         path: info.file,
