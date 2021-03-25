@@ -77,13 +77,15 @@ function run() {
                 repo: github.context.repo.repo,
                 name: "XCode Results",
                 status: "completed",
-                summary: "Test Summary",
-                title: "Test Title",
                 conclusion: "failure",
                 head_sha: sha,
-                output: { "annotations": annotations }
+                output: {
+                    summary: "Test Summary",
+                    title: "Test Title",
+                    annotations: annotations
+                }
             };
-            console.log(`Check Info: ${checkInfo}`);
+            console.log(`Check Info: ${JSON.stringify(checkInfo)}`);
             yield octokit.checks.create(checkInfo);
             core.debug(`Done`);
         }
