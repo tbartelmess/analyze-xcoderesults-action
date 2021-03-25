@@ -20,4 +20,6 @@ export async function transformXCodeResults(file: string): Promise<void> {
   ]
 
   await exec.exec('xcrun', args, options)
+
+  console.info(output);
 }
