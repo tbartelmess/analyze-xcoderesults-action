@@ -131,16 +131,16 @@ exports.testFailureToGitHubAnnotation = exports.warningsToGitHubAnnotation = exp
 const core = __importStar(__webpack_require__(2186));
 const exec = __importStar(__webpack_require__(1514));
 function generateGitHubCheckOutput(file) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         let summary = yield convertResultsToJSON(file);
         let annotations = summary.issues.testFailureSummaries._values.map(failure => {
             return testFailureToGitHubAnnotation(failure);
         });
-        if (core.getInput("showWarnings") == "true") {
-            let warningAnnotations = summary.issues.warningSummaries._values.map(warning => {
-                return warningsToGitHubAnnotation(warning);
-            });
-        }
+        let warningAnnotations = (_a = summary.issues.warningSummaries) === null || _a === void 0 ? void 0 : _a._values.map(warning => {
+            return warningsToGitHubAnnotation(warning);
+        });
+        annotations.push(...warningAnnotations);
         return {
             summary: testSummary(summary.metrics),
             title: core.getInput('title'),

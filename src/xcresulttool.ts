@@ -14,12 +14,11 @@ export async function generateGitHubCheckOutput(file: string): Promise<any> {
   let annotations = summary.issues.testFailureSummaries._values.map(failure => {
     return testFailureToGitHubAnnotation(failure)
   })
-  if (core.getInput("showWarnings") == "true") {
-    let warningAnnotations = summary.issues.warningSummaries._values.map(warning => {
-      return warningsToGitHubAnnotation(warning)
-    })
+  let warningAnnotations = summary.issues.warningSummaries?._values.map(warning => {
+    return warningsToGitHubAnnotation(warning)
+  })
+  annotations.push(...warningAnnotations)
 
-  }
   return {
     summary: testSummary(summary.metrics),
     title: core.getInput('title'),
@@ -192,6 +191,7 @@ export function testSummary(metrics: ResultMetrics): string {
 | ${passed} | ${failed} | ${testCount} |
 `
 }
+
 
 export function parseURLToLocation(urlString: string): LocationInfo {
   let url = new URL(urlString)
