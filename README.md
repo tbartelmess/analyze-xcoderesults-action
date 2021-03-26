@@ -26,7 +26,7 @@ in `TestResults.xcresult`
 | Option       | Required | Default | Description |
 |:-------------|:---------|:--------|:------------|
 | `results`     | Yes      |         | Path to the `.xcresult` bundle | 
-| `GITHUB_TOKEN | Yes      |         | GitHub token to create the GitHub check objects. ` ${{ secrets.GITHUB_TOKEN }}` is recommended | 
+| `GITHUB_TOKEN` | Yes      |         | GitHub token to create the GitHub check objects. ` ${{ secrets.GITHUB_TOKEN }}` is recommended | 
 | `pathPrefix` | No       | Path to the GitHub Workspace | Paths inside the xcode result build are absolute. For GitHub to find the corresponding file for annotations the paths need to be relative to the build directory. If your checkout is not into the GitHub workspace, this option can be used to configure a different prefix. |
 | `title`      | No       | Test Results | Title to show up as the check name | 
 | `testSummaryTable` | No | `true`    | Setting if a table with the test results should be included | 
@@ -41,7 +41,7 @@ The following example builds and tests the "My Framework" scheme and analyzes th
 
 The result of this can be seen in this [test run](https://github.com/tbartelmess/action-test/pull/1/checks?check_run_id=2197833878)
 
-```
+```yaml
 ---
 name: Run Tests
 on:
