@@ -9,83 +9,6 @@ export type Annotations = NonNullable<
   >['annotations']
 >
 
-export class GenerationSettings {
-  testSummaryTable: boolean = true;
-  testFailureAnnotations: boolean = true;
-  summary: boolean = true;
-  warningAnnotations: boolean = true;
-  showSDKInfo: boolean = true;
-
-  readActionSettings() {
-    this.testSummaryTable = (core.getInput('testSummaryTable') === "true")
-    this.testFailureAnnotations = (core.getInput('testFailureAnnotations') === "true")
-    this.summary = (core.getInput('summary') === "true")
-    this.warningAnnotations = (core.getInput('warningAnnotations') === "true")
-    this.showSDKInfo = (core.getInput('showSDKInfo') === "true")
-  }
-}
-
-export async function generateGitHubCheckOutput(settings: GenerationSettings, file: string): Promise<any> {
-  let summary: ResultSummary = await convertResultsToJSON(file)
-  let annotations: GitHubAnnotation[] = []
-
-  if (settings.testSummaryTable) {
-    let failureAnnotations = summary.issues.testFailureSummaries._values.forEach(failure => {
-      let annotation = testFailureToGitHubAnnotation(failure)
-      annotations.push(annotation)
-    })
-  }
-
-  if (settings.warningAnnotations) {
-    let warningAnnotations = summary.issues.warningSummaries?._values.forEach(warning => {
-        let annotation = warningsToGitHubAnnotation(warning)
-        if (annotation) {
-          annotations.push(annotation)
-        }
-    })
-  }
-
-  let summaryMd = ""
-
-  if (settings.summary) {
-    summaryMd += buildSummary(summary.metrics)
-  }
-
-  if (settings.testSummaryTable) {
-    summaryMd += testSummary(summary.metrics)
-  }
-
-  return {
-    summary: summaryMd,
-    title: core.getInput('title'),
-    annotations: annotations
-  }
-}
-
-export async function convertResultsToJSON(
-  file: string
-): Promise<ResultSummary> {
-  let output = ''
-  const options: ExecOptions = {}
-  options.listeners = {
-    stdout: (data: Buffer) => {
-      output += data.toString()
-    }
-  }
-  options.silent = true
-  const args: string[] = [
-    'xcresulttool',
-    'get',
-    '--path',
-    file,
-    '--format',
-    'json'
-  ]
-
-  await exec.exec('xcrun', args, options)
-  return JSON.parse(output) as ResultSummary
-}
-
 interface ResultSummary {
   actions: [any]
   issues: ResultIssueSummaries
@@ -218,6 +141,98 @@ interface GitHubAnnotation {
   raw_details?: string
 }
 
+
+export class GenerationSettings {
+  testSummaryTable: boolean = true;
+  testFailureAnnotations: boolean = true;
+  summary: boolean = true;
+  warningAnnotations: boolean = true;
+  showSDKInfo: boolean = true;
+
+  readActionSettings() {
+    this.testSummaryTable = (core.getInput('testSummaryTable') === "true")
+    this.testFailureAnnotations = (core.getInput('testFailureAnnotations') === "true")
+    this.summary = (core.getInput('summary') === "true")
+    this.warningAnnotations = (core.getInput('warningAnnotations') === "true")
+    this.showSDKInfo = (core.getInput('showSDKInfo') === "true")
+  }
+}
+
+export async function generateGitHubCheckOutput(settings: GenerationSettings, file: string): Promise<any> {
+  let summary: ResultSummary = await convertResultsToJSON(file)
+  let annotations: GitHubAnnotation[] = []
+
+  if (settings.testSummaryTable) {
+    summary.issues.testFailureSummaries?._values.forEach(failure => {
+      let annotation = testFailureToGitHubAnnotation(failure)
+      annotations.push(annotation)
+    })
+  }
+
+  if (settings.warningAnnotations) {
+    let warningAnnotations = summary.issues.warningSummaries?._values.forEach(warning => {
+        let annotation = warningsToGitHubAnnotation(warning)
+        if (annotation) {
+          annotations.push(annotation)
+        }
+    })
+  }
+
+  let summaryMd = ""
+
+  if (settings.summary) {
+    summaryMd += buildSummary(summary.metrics)
+  }
+
+  if (settings.testSummaryTable) {
+    summaryMd += testSummary(summary.metrics)
+  }
+
+  return {
+    summary: summaryMd,
+    title: core.getInput('title'),
+    annotations: annotations
+  }
+}
+
+/**
+ * Wrapper around the xcresultool
+ * to transform xcresult files to JSON.
+ *
+ * @argument file: path to the xcresult bundle
+ * @argument object: name of the object to export, if null, the root object will be returned
+ */
+export async function convertResultsToJSON(
+  file: string,
+  object: string|null = null
+): Promise<ResultSummary> {
+  let output = ''
+  const options: ExecOptions = {}
+  options.listeners = {
+    stdout: (data: Buffer) => {
+      output += data.toString()
+    }
+  }
+  options.silent = true
+  let args: string[] = [
+    'xcresulttool',
+    'get',
+    '--path',
+    file,
+    '--format',
+    'json'
+  ]
+
+  if (object != null) {
+    args.push("--id")
+    args.push(object)
+  }
+
+  await exec.exec('xcrun', args, options)
+  return JSON.parse(output) as ResultSummary
+}
+
+
 export function testSummary(metrics: ResultMetrics): string {
   let testCount = metrics?.testsCount?._value ?? 0
   let failed = metrics?.testsFailedCount?._value ?? 0
@@ -231,6 +246,11 @@ export function testSummary(metrics: ResultMetrics): string {
 `
 }
 
+
+/**
+ * Generates a bit of mark down that is shown at the top of the
+ * check page
+ */
 export function buildSummary(metrics: ResultMetrics) {
   let testCount = metrics?.testsCount?._value ?? 0
   let failed = metrics?.testsFailedCount?._value ?? 0
@@ -273,6 +293,9 @@ export function parseURLToLocation(urlString: string): LocationInfo {
   return info
 }
 
+/**
+ * Generate GitHub annotations from an IssueSummary Object
+ */
 export function warningsToGitHubAnnotation(issue: IssueSummary): GitHubAnnotation | null {
   let location = issue.documentLocationInCreatingWorkspace;
   if (location == undefined) {
@@ -290,6 +313,12 @@ export function warningsToGitHubAnnotation(issue: IssueSummary): GitHubAnnotatio
   return annotation
 }
 
+/**
+ * Generate GitHub annotations from TestFailureIssueSummary objects
+ *
+ * GitHub requires start_line and end_line to be non-null so when xcode does
+ * not include source information we are pretending it's line zero.
+ */
 export function testFailureToGitHubAnnotation(
   issue: TestFailureIssueSummary
 ): GitHubAnnotation {
