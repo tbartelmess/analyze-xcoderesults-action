@@ -146,6 +146,7 @@ class GenerationSettings {
         this.summary = true;
         this.warningAnnotations = true;
         this.showSDKInfo = true;
+        this.timingSummary = true;
     }
     readActionSettings() {
         this.testSummaryTable = (core.getInput('testSummaryTable') === "true");
@@ -153,6 +154,7 @@ class GenerationSettings {
         this.summary = (core.getInput('summary') === "true");
         this.warningAnnotations = (core.getInput('warningAnnotations') === "true");
         this.showSDKInfo = (core.getInput('showSDKInfo') === "true");
+        this.timingSummary = (core.getInput('timingSummary') === "true");
     }
 }
 exports.GenerationSettings = GenerationSettings;
@@ -162,8 +164,7 @@ function generateGitHubOutcome(settings, file) {
         let summary = yield convertResultsToJSON(file);
         let success = true;
         (_a = summary.actions) === null || _a === void 0 ? void 0 : _a._values.forEach(action => {
-            console.log(action.title._value);
-            success = (success && action.actionResult.status._value != "succeeded" && action.actionResult.status._value != "notRequested");
+            success = (success && action.actionResult.status._value != "failed");
         });
         return success ? "success" : "failure";
     });
