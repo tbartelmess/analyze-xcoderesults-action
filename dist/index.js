@@ -189,6 +189,8 @@ function generateGitHubCheckOutput(settings, file) {
                 }
             });
         }
+        // Github only support 50 annotations
+        annotations = annotations.slice(0, 49);
         let summaryMd = "";
         if (settings.summary) {
             summaryMd += buildSummary(summary.metrics);
