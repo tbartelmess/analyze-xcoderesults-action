@@ -10,7 +10,7 @@ export type Annotations = NonNullable<
 >
 
 interface ResultSummary {
-  actions: [any]
+  actions: TypedArray<ActionRecord>
   issues: ResultIssueSummaries
   metrics: ResultMetrics
 }
@@ -39,7 +39,6 @@ interface ResultIssueSummaries {
   _type: TypeInfo
   testFailureSummaries: TypedArray<TestFailureIssueSummary>
   warningSummaries: TypedArray<IssueSummary>
-
 }
 
 interface URL {
@@ -85,6 +84,20 @@ interface ActionSDKRecord {
   identifier: TypedValue<string>
   name: TypedValue<string>
   operatingSystemVersion: TypedValue<string>
+}
+
+interface ActionResult {
+  _type: TypeInfo
+  status: TypedValue<string>
+}
+
+interface ActionRecord {
+  _type: TypeInfo
+  actionResult: ActionResult
+  title: TypedValue<string>
+  startedTime: TypedValue<string>
+  endedTime: TypedValue<string>
+  actionStatus: TypedValue<string>
 }
 
 interface ActionRunDestinationRecord {
@@ -156,6 +169,17 @@ export class GenerationSettings {
     this.warningAnnotations = (core.getInput('warningAnnotations') === "true")
     this.showSDKInfo = (core.getInput('showSDKInfo') === "true")
   }
+}
+
+export async function generateGitHubOutcome(settings: GenerationSettings, file: string): Promise<string> {
+
+  let summary: ResultSummary = await convertResultsToJSON(file)
+  let success = true
+  summary.actions?._values.forEach(action => {
+    console.log(action.title._value);
+    success = (success && action.actionResult.status._value != "succeeded" && action.actionResult.status._value != "notRequested");
+  });
+  return success ? "success" : "failure";
 }
 
 export async function generateGitHubCheckOutput(settings: GenerationSettings, file: string): Promise<any> {

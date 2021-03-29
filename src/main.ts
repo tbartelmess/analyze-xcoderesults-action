@@ -45,6 +45,7 @@ async function run(): Promise<void> {
     let settings = new xcresulttool.GenerationSettings()
     settings.readActionSettings()
     let output = await xcresulttool.generateGitHubCheckOutput(settings, inputFile)
+    let conclusion = await xcresulttool.generateGitHubOutcome(settings, inputFile)
     core.debug(
       `Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`
     )
@@ -54,9 +55,9 @@ async function run(): Promise<void> {
     let checkInfo: CheckCreate = {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
-      name: 'XCode Results',
+      name: core.getInput('title'),
       status: 'completed',
-      conclusion: 'failure',
+      conclusion: conclusion,
       head_sha: sha,
       output: output
     }
