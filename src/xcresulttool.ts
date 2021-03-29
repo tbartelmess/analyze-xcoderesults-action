@@ -203,6 +203,8 @@ export async function generateGitHubCheckOutput(settings: GenerationSettings, fi
         }
     })
   }
+  // Github only support 50 annotations
+  annotations = annotations.slice(0,49);
 
   let summaryMd = ""
 
