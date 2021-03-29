@@ -161,6 +161,7 @@ export class GenerationSettings {
   summary: boolean = true;
   warningAnnotations: boolean = true;
   showSDKInfo: boolean = true;
+  timingSummary: boolean = true;
 
   readActionSettings() {
     this.testSummaryTable = (core.getInput('testSummaryTable') === "true")
@@ -168,6 +169,8 @@ export class GenerationSettings {
     this.summary = (core.getInput('summary') === "true")
     this.warningAnnotations = (core.getInput('warningAnnotations') === "true")
     this.showSDKInfo = (core.getInput('showSDKInfo') === "true")
+    this.timingSummary = (core.getInput('timingSummary') === "true")
+
   }
 }
 
@@ -176,8 +179,7 @@ export async function generateGitHubOutcome(settings: GenerationSettings, file: 
   let summary: ResultSummary = await convertResultsToJSON(file)
   let success = true
   summary.actions?._values.forEach(action => {
-    console.log(action.title._value);
-    success = (success && action.actionResult.status._value != "succeeded" && action.actionResult.status._value != "notRequested");
+    success = (success && action.actionResult.status._value != "failed");
   });
   return success ? "success" : "failure";
 }
@@ -269,6 +271,8 @@ export function testSummary(metrics: ResultMetrics): string {
 | ${passed} | ${failed} | ${testCount} |
 `
 }
+
+
 
 
 /**
