@@ -29,7 +29,7 @@
     "@actions/exec": "^1.0.4",
     "@actions/github": "^4.0.0",
     "@actions/http-client": "^1.0.11",
-    "@octokit/action": "^3.7.1",
+    "@octokit/action": "^3.8.0",
     "@octokit/plugin-rest-endpoint-methods": "^5.0.0",
     "@octokit/rest": "^18.5.2",
     "@octokit/types": "^6.13.0"
