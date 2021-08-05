@@ -1,6 +1,6 @@
 {
   "name": "analyze-xcoderesults-action",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "private": true,
   "description": "Action to show details of an XCode result bundle as GitHub check result",
   "main": "lib/main.js",
