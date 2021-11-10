@@ -5,6 +5,7 @@ import {RestEndpointMethodTypes} from '@octokit/rest'
 import * as ok from '@octokit/action'
 type PullRequest = RestEndpointMethodTypes['pulls']['get']['response']['data']
 type CheckCreate = RestEndpointMethodTypes['checks']['create']['parameters']
+type CheckUpdate = RestEndpointMethodTypes['checks']['update']['parameters']
 const prEvents = [
   'pull_request',
   'pull_request_review',
@@ -44,15 +45,25 @@ async function run(): Promise<void> {
 
     let settings = new xcresulttool.GenerationSettings()
     settings.readActionSettings()
-    let output = await xcresulttool.generateGitHubCheckOutput(settings, inputFile)
-    let conclusion = await xcresulttool.generateGitHubOutcome(settings, inputFile)
+    let output = await xcresulttool.generateGitHubCheckOutput(
+      settings,
+      inputFile
+    )
+    let conclusion = await xcresulttool.generateGitHubOutcome(
+      settings,
+      inputFile
+    )
     core.debug(
       `Creating a new Run on ${ownership.owner}/${ownership.repo}@${sha}`
     )
 
     let octokit = new ok.Octokit()
 
-    let checkInfo: CheckCreate = {
+    let allAnnotations = output.annotations
+    let firstBatch = true
+    const batchLimit = 50
+
+    let checkInfo = {
       owner: github.context.repo.owner,
       repo: github.context.repo.repo,
       name: core.getInput('title'),
@@ -61,7 +72,23 @@ async function run(): Promise<void> {
       head_sha: sha,
       output: output
     }
-    await octokit.checks.create(checkInfo)
+
+    while (allAnnotations.length >= batchLimit) {
+      output.annotations = allAnnotations.slice(0, batchLimit)
+
+      if (firstBatch) {
+        firstBatch = false
+        let checkRun = await octokit.checks.create(checkInfo as CheckCreate)
+        checkInfo = {
+          ...checkInfo,
+          ...{check_run_id: checkRun.data.id}
+        }
+      } else {
+        await octokit.checks.update(checkInfo as CheckUpdate)
+      }
+
+      allAnnotations = allAnnotations.slice(batchLimit)
+    }
     core.debug(`Done`)
   } catch (error) {
     core.setFailed(error.message)
