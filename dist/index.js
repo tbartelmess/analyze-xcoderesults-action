@@ -90,11 +90,15 @@ function run() {
                 output.annotations = allAnnotations.slice(0, batchLimit);
                 if (firstBatch) {
                     firstBatch = false;
-                    let checkRun = yield octokit.checks.create(checkInfo);
+                    core.debug(`Server request create: ${JSON.stringify(checkInfo)}`);
+                    const checkRun = yield octokit.checks.create(checkInfo);
+                    core.debug(`Server response: ${JSON.stringify(checkRun)}`);
                     checkInfo = Object.assign(Object.assign({}, checkInfo), { check_run_id: checkRun.data.id });
                 }
                 else {
-                    yield octokit.checks.update(checkInfo);
+                    core.debug(`Server request update: ${JSON.stringify(checkInfo)}`);
+                    const checkRun = yield octokit.checks.update(checkInfo);
+                    core.debug(`Server response: ${JSON.stringify(checkRun)}`);
                 }
                 allAnnotations = allAnnotations.slice(batchLimit);
             }

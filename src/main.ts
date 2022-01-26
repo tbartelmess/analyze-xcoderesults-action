@@ -78,13 +78,17 @@ async function run(): Promise<void> {
 
       if (firstBatch) {
         firstBatch = false
-        let checkRun = await octokit.checks.create(checkInfo as CheckCreate)
+        core.debug(`Server request create: ${JSON.stringify(checkInfo)}`)
+        const checkRun = await octokit.checks.create(checkInfo as CheckCreate)
+        core.debug(`Server response: ${JSON.stringify(checkRun)}`)
         checkInfo = {
           ...checkInfo,
           ...{check_run_id: checkRun.data.id}
         }
       } else {
-        await octokit.checks.update(checkInfo as CheckUpdate)
+        core.debug(`Server request update: ${JSON.stringify(checkInfo)}`)
+        const checkRun = await octokit.checks.update(checkInfo as CheckUpdate)
+        core.debug(`Server response: ${JSON.stringify(checkRun)}`)
       }
 
       allAnnotations = allAnnotations.slice(batchLimit)
