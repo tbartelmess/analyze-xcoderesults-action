@@ -86,7 +86,7 @@ function run() {
                 head_sha: sha,
                 output: output
             };
-            while (allAnnotations.length >= batchLimit) {
+            while (allAnnotations.length >= 0) {
                 output.annotations = allAnnotations.slice(0, batchLimit);
                 if (firstBatch) {
                     firstBatch = false;

@@ -73,7 +73,7 @@ async function run(): Promise<void> {
       output: output
     }
 
-    while (allAnnotations.length >= batchLimit) {
+    while (allAnnotations.length >= 0) {
       output.annotations = allAnnotations.slice(0, batchLimit)
 
       if (firstBatch) {
@@ -93,6 +93,7 @@ async function run(): Promise<void> {
 
       allAnnotations = allAnnotations.slice(batchLimit)
     }
+
     core.debug(`Done`)
   } catch (error) {
     core.setFailed(error.message)
