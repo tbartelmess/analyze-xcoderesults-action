@@ -8,7 +8,7 @@ beforeEach(() => {
     '/Users/thomasbartelmess/Developer/action-test/'
 })
 
-test('wait 500 ms', async () => {
+test('wait 2500 ms', async () => {
   await xcresultool.generateGitHubCheckOutput(
     new xcresultool.GenerationSettings(),
     FAILED_TEST_FILE

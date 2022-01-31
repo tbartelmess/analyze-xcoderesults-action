@@ -23,6 +23,10 @@ function getSHA(): string {
   return sha
 }
 
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 type Ownership = {
   owner: string
   repo: string
@@ -73,7 +77,7 @@ async function run(): Promise<void> {
       output: output
     }
 
-    while (allAnnotations.length >= 0) {
+    while (allAnnotations.length > 0) {
       output.annotations = allAnnotations.slice(0, batchLimit)
 
       if (firstBatch) {
@@ -90,6 +94,9 @@ async function run(): Promise<void> {
       }
 
       allAnnotations = allAnnotations.slice(batchLimit)
+
+      // avoid hitting a secondary rate
+      await sleep(2000)
     }
 
     core.debug(`Done`)

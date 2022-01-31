@@ -55,6 +55,9 @@ function getSHA() {
     }
     return sha;
 }
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 const formatDate = () => {
     return new Date().toISOString();
 };
@@ -86,7 +89,7 @@ function run() {
                 head_sha: sha,
                 output: output
             };
-            while (allAnnotations.length >= 0) {
+            while (allAnnotations.length > 0) {
                 output.annotations = allAnnotations.slice(0, batchLimit);
                 if (firstBatch) {
                     firstBatch = false;
@@ -99,6 +102,8 @@ function run() {
                     core.debug(`Server update response: ${JSON.stringify(checkRun)}`);
                 }
                 allAnnotations = allAnnotations.slice(batchLimit);
+                // avoid hitting a secondary rate
+                yield sleep(2000);
             }
             core.debug(`Done`);
         }
